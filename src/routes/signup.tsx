@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [{ title: "Sign up — Freelancer's Portal" }] }),
@@ -12,6 +14,7 @@ export const Route = createFileRoute("/signup")({
 
 function SignupPage() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Toaster />
@@ -24,16 +27,34 @@ function SignupPage() {
         <p className="mt-1 text-sm text-muted-foreground">Start your free trial. No card required.</p>
         <form
           className="mt-6 space-y-4"
-          onSubmit={(e) => {
+          onSubmit={async (e) => {
             e.preventDefault();
-            toast.success("Account created (mock)");
+            const form = e.currentTarget as HTMLFormElement;
+            const name = (form.elements.namedItem("name") as HTMLInputElement).value;
+            const email = (form.elements.namedItem("email") as HTMLInputElement).value;
+            const password = (form.elements.namedItem("password") as HTMLInputElement).value;
+            setLoading(true);
+            const { error } = await supabase.auth.signUp({
+              email,
+              password,
+              options: {
+                emailRedirectTo: `${window.location.origin}/dashboard`,
+                data: { full_name: name },
+              },
+            });
+            setLoading(false);
+            if (error) {
+              toast.error(error.message);
+              return;
+            }
+            toast.success("Account created");
             navigate({ to: "/dashboard" });
           }}
         >
-          <div className="space-y-1.5"><Label htmlFor="name">Name</Label><Input id="name" required /></div>
-          <div className="space-y-1.5"><Label htmlFor="email">Email</Label><Input id="email" type="email" required /></div>
-          <div className="space-y-1.5"><Label htmlFor="password">Password</Label><Input id="password" type="password" required /></div>
-          <Button type="submit" className="w-full">Create account</Button>
+          <div className="space-y-1.5"><Label htmlFor="name">Name</Label><Input id="name" name="name" required /></div>
+          <div className="space-y-1.5"><Label htmlFor="email">Email</Label><Input id="email" name="email" type="email" required /></div>
+          <div className="space-y-1.5"><Label htmlFor="password">Password</Label><Input id="password" name="password" type="password" required /></div>
+          <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating…" : "Create account"}</Button>
         </form>
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Already have an account? <Link to="/login" className="text-primary hover:underline">Log in</Link>
