@@ -103,6 +103,30 @@ export type Database = {
           },
         ]
       }
+      connection_test: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lessons: {
         Row: {
           created_at: string
